@@ -1,22 +1,31 @@
-//API для расписания по группе
 const express = require('express');
-const axios = require('axios');
+const puppeteer = require('puppeteer'); // Подключаем Puppeteer
 const cheerio = require('cheerio');
 const router = express.Router();
 
 const SSAU_BASE_URL = 'https://ssau.ru/rasp';
+
 const fetchScheduleHTML = async (url) => {
     try {
-        const response = await axios.get(url);
-        return response.data;
+        // Запускаем Puppeteer
+        const browser = await puppeteer.launch({ headless: true });
+        const page = await browser.newPage();
+        
+        // Переходим на страницу
+        await page.goto(url, { waitUntil: 'networkidle2' }); // Ждем, пока страница полностью загрузится
+
+        // Получаем HTML страницы
+        const html = await page.content();
+
+        await browser.close();
+        return html;
     } catch (error) {
         throw new Error(`Не удалось загрузить расписание с ${url}`);
     }
 };
 
 const processSchedule = ($, week) => {
-    // Здесь будет логика парсинга расписания (см. код из вашего вопроса)
-    // Это будет функция, возвращающая данные расписания
+    // Логика парсинга расписания
     return {
         days: ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"],
         times: ["9:00 - 10:30", "10:45 - 12:15", "12:30 - 14:00"],
@@ -36,9 +45,12 @@ router.get('/', async (req, res) => {
         }
 
         const url = `${SSAU_BASE_URL}?groupId=${groupId}&selectedWeek=${week}`;
-        const html = await fetchScheduleHTML(url);
-        const $ = cheerio.load(html);
         
+        // Используем Puppeteer для получения HTML
+        const html = await fetchScheduleHTML(url);
+        console.log(html.substring(0, 500)); // Выведем первые 500 символов страницы для отладки
+        const $ = cheerio.load(html);
+
         const groupName = $('.page-header h1.h1-text').text().trim();
         const scheduleData = processSchedule($, week);
 
