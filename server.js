@@ -1,33 +1,33 @@
+// server.js
 const express = require('express');
-const axios = require('axios');
-const cheerio = require('cheerio');
 const cors = require('cors');
+const path = require('path');
 
+// Подключение маршрутов
+const groupsRoute = require('./routes/groups');
+const scheduleByGroupRoute = require('./routes/scheduleByGroup');
+const scheduleByTeacherRoute = require('./routes/scheduleByTeacher');
+const currentWeekRoute = require('./routes/currentWeek');
+
+// Подключение парсера
+const { processSchedule } = require('./utils/parseSchedule');
+
+// Инициализация сервера
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middleware
 app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'web')));
 
-// Маршрут для получения списка групп
-app.get('/api/groups', async (req, res) => {
-    // Логика парсинга списка групп с ssau.ru
-});
+// Подключение маршрутов
+app.use('/api/groups', groupsRoute);
+app.use('/api/schedule', scheduleByGroupRoute);
+app.use('/api/teacherSchedule', scheduleByTeacherRoute);
+app.use('/api/currentWeek', currentWeekRoute);
 
-// Маршрут для получения расписания по группе
-app.get('/api/schedule/group/:groupId', async (req, res) => {
-    // Логика парсинга расписания для указанной группы
-});
-
-// Маршрут для получения расписания по преподавателю
-app.get('/api/schedule/teacher/:teacherId', async (req, res) => {
-    // Логика парсинга расписания для указанного преподавателя
-});
-
-// Маршрут для получения текущей учебной недели
-app.get('/api/current-week', async (req, res) => {
-    // Логика определения текущей учебной недели
-});
-
+// Запуск сервера
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
